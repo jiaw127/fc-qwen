@@ -9,6 +9,7 @@ from schema import *
 
 gen = Generation()
 model = os.getenv("MODEL_NAME") or Generation.Models.qwen_v1
+max_tokens = int(os.getenv("MAX_TOKENS") or "1500")
 
 def stream_chat(messages:list, max_length:int):
     '''
@@ -20,7 +21,7 @@ def stream_chat(messages:list, max_length:int):
         messages=to_qwen_message(messages),
         result_format='message',  # set the result is message format.
         stream=True,
-        max_length=max_length,
+        max_length=max_length if max_length <= max_tokens else max_tokens,
     )
     return EventSourceResponse(generate(responses, created), media_type="text/event-stream")
 
@@ -47,7 +48,7 @@ def chat(messages:list[ChatCompletionMessage], max_length:int) -> ChatCompletion
         messages=to_qwen_message(messages),
         result_format='message',  # set the result is message format.
         stream=False,
-        max_length=max_length,
+        max_length=max_length if max_length <= max_tokens else max_tokens,
     )
     if response.status_code == 200:
         return JSONResponse(content=to_response(response,created))
